@@ -1,0 +1,67 @@
+{
+  "name": "decision-pony",
+  "version": "0.0.0",
+  "description": "Decision Pony",
+  "type": "module",
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "lint": "eslint --fix './**/*.{js,ts}'",
+    "lint:ci": "eslint --max-warnings 0 './**/*.{js,ts}'",
+    "prepack": "tsdown",
+    "test": "vitest --passWithNoTests",
+    "release": "release-it"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CyanSalt/decision-pony.git"
+  },
+  "keywords": [
+    "decision"
+  ],
+  "author": "CyanSalt",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/CyanSalt/decision-pony/issues"
+  },
+  "homepage": "https://github.com/CyanSalt/decision-pony#readme",
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "^24.15.0",
+      "onFail": "error"
+    },
+    "packageManager": [
+      {
+        "name": "pnpm",
+        "version": "^11.0.0",
+        "onFail": "ignore"
+      },
+      {
+        "name": "npm",
+        "onFail": "ignore"
+      }
+    ]
+  },
+  "devDependencies": {
+    "@cyansalt/eslint-config": "^4.6.0",
+    "@cyansalt/tsconfig": "^3.0.2",
+    "@release-it/conventional-changelog": "^12.0.2",
+    "eslint": "^10.12.0",
+    "release-it": "^21.1.1",
+    "tsdown": "^0.23.1",
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.4"
+  }
+}

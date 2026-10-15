@@ -2,7 +2,8 @@
   "extends": "@cyansalt/tsconfig",
   "compilerOptions": {
     "composite": true,
-    "noEmit": false
+    "noEmit": false,
+    "outDir": "node_modules/.cache/tsconfig.lib"
   },
   "include": [
     "src"

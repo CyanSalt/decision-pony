@@ -1,7 +1,7 @@
 {
   "name": "decision-pony",
   "version": "0.0.0",
-  "description": "Decision Pony",
+  "description": "OpenAI Decisions API polyfill with conversational LLM protocols",
   "type": "module",
   "main": "./dist/index.mjs",
   "module": "./dist/index.mjs",
@@ -20,7 +20,7 @@
     "lint": "eslint --fix './**/*.{js,ts}'",
     "lint:ci": "eslint --max-warnings 0 './**/*.{js,ts}'",
     "prepack": "tsdown",
-    "test": "vitest --passWithNoTests",
+    "test": "vitest",
     "release": "release-it"
   },
   "repository": {
@@ -28,7 +28,10 @@
     "url": "git+https://github.com/CyanSalt/decision-pony.git"
   },
   "keywords": [
-    "decision"
+    "anthropic",
+    "decisions",
+    "llm",
+    "openai"
   ],
   "author": "CyanSalt",
   "license": "ISC",
@@ -59,9 +62,18 @@
     "@cyansalt/tsconfig": "^3.0.2",
     "@release-it/conventional-changelog": "^12.0.2",
     "eslint": "^10.12.0",
+    "openai": "^7.34.0",
     "release-it": "^21.1.1",
     "tsdown": "^0.23.1",
     "typescript": "^6.0.3",
     "vitest": "^5.0.4"
+  },
+  "peerDependencies": {
+    "openai": ">=7.30.0"
+  },
+  "peerDependenciesMeta": {
+    "openai": {
+      "optional": true
+    }
   }
 }

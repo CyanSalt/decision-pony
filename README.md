@@ -12,6 +12,9 @@ pnpm add decision-pony
 
 ## Usage
 
+<details>
+<summary>With OpenAI Chat Completions API</summary><br>
+
 ```typescript
 import {
   fromOpenAICompletionsResponse,
@@ -24,11 +27,36 @@ import type OpenAI from 'openai'
 async function createDecisions(client: OpenAI, body: DecisionCreateParams): Promise<Decision> {
   return fromOpenAICompletionsResponse(
     await client.chat.completions.create(
-      toOpenAICompletionsRequest(request),
+      toOpenAICompletionsRequest(body),
     )
   )
 }
 ```
+
+<br></details>
+
+<details>
+<summary>With OpenAI Responses API</summary><br>
+
+```typescript
+import {
+  fromOpenAIResponsesResponse,
+  toOpenAIResponsesRequest,
+} from 'decision-pony'
+import type OpenAI from 'openai'
+
+// Polyfill for `client.decisions.create` on OpenAI-compatible endpoints without
+// Decisions API support or with non-System-One models.
+async function createDecisions(client: OpenAI, body: DecisionCreateParams): Promise<Decision> {
+  return fromOpenAIResponsesResponse(
+    await client.responses.create(
+      toOpenAIResponsesRequest(body),
+    )
+  )
+}
+```
+
+<br></details>
 
 ## Limitations
 

@@ -55,6 +55,7 @@ models.[cite:7]
 - Preserve question order, names, typed choice values, and score labels.
 - Represent per-question refusals.
 - Target OpenAI Responses, OpenAI Chat Completions, and Anthropic Messages.
+- Target TypeSafe System One through its native question protocol.
 - Pass the required Decisions `model` field through to the target protocol.
 - Keep protocol conversion pure and independent from HTTP clients, credentials,
   retries, and model routing.
@@ -134,11 +135,11 @@ export function fromOpenAIResponsesResponse(
 ): Decision
 ```
 
-The same pattern applies to Chat Completions and Anthropic Messages. Passing the
-original request is simpler than defining a second context type and is still
-explicit, serializable, and free of hidden mutable state. A caller that crosses
-a process or queue boundary must persist the original request alongside the
-downstream request.
+The same pattern applies to Chat Completions, Anthropic Messages, and TypeSafe
+System One. Passing the original request is simpler than defining a second
+context type and is still explicit, serializable, and free of hidden mutable
+state. A caller that crosses a process or queue boundary must persist the
+original request alongside the downstream request.
 
 OpenAI's hosted Decisions endpoint currently accepts only `gpt-6-luna`, but the
 wire field itself is a required string.[cite:1][cite:2] A polyfill must not
@@ -195,8 +196,8 @@ tools create unnecessary provider-specific behavior.
 
 ### Provider-Neutral Generated Result
 
-Every protocol asks the model to produce the shared `DecisionPonyData` shape
-defined in `src/decision.ts`:
+The three conversational protocols ask the model to produce the shared
+`DecisionPonyData` shape defined in `src/decision.ts`:
 
 ```ts
 export interface DecisionPonyAnswer {
@@ -257,6 +258,7 @@ initial implementation:
 | OpenAI Responses | Top-level `instructions` | `input` | `text.format` |
 | OpenAI Chat Completions | Static `developer` message | Evidence as user messages, then question JSON as the final user message | `response_format` |
 | Anthropic Messages | Top-level `system` | `user` messages | `output_config.format` |
+| TypeSafe System One | None | `state` | Native `questions` map |
 
 Responses supports text and image input and structured JSON output.[cite:3][cite:5]
 Chat Completions supports developer instructions, user text and images, and
@@ -272,6 +274,24 @@ that this is a cross-provider approximation.
 Every target request must use `request.model` unchanged. Whether that model ID
 is accepted by the selected endpoint is the caller's routing concern.
 
+TypeSafe System One is a native decision API rather than a conversational
+protocol, so it does not use the shared prompt or JSON Schema carrier:
+
+- A Decisions `predicate` becomes a System One `noul` question.
+- A Decisions `choice` becomes a System One `choice`; generated
+  `choice-0`, `choice-1`, ... keys identify criteria, while their structured
+  values preserve the original typed value and description.
+- A Decisions `score` becomes a System One `score`; each criterion contains a
+  generated `level-0`, `level-1`, ... key with its original label and
+  description. System One's response probabilities remain keyed by their
+  zero-based level index.
+- The adapter uses generated `question-0`, `question-1`, ... keys because
+  Decisions names are optional and may not be unique. It restores original
+  names and order from the source request when decoding.
+
+System One does not expose an equivalent of `safety_identifier`, so the
+adapter does not forward it.
+
 ### Input Mapping
 
 The canonical input mapper should preserve evidence order:
@@ -283,6 +303,10 @@ The canonical input mapper should preserve evidence order:
   Decisions image `detail`.
 - Anthropic maps every image URL to its URL source without rewriting it.
 - No file, audio, assistant, tool, or item-reference types are accepted.
+- System One accepts text only. A string remains the state string; each
+  all-text Decisions user message becomes one string in an ordered state array.
+  Image input raises `TypeError` because the adapter neither downloads URLs nor
+  converts base64 data into provider-specific assets.
 
 No adapter should download or rewrite image content. Network access belongs to
 the caller or downstream provider.
@@ -297,6 +321,9 @@ Each protocol module should extract exactly one complete structured document:
   `message.content` and parse it as `DecisionPonyData`, unless
   `message.refusal` maps every question to a refusal.
 - Anthropic Messages: require the structured JSON text block.
+- TypeSafe System One: read the answer with the generated question key, then
+  rebuild provider-neutral probability vectors in the original request order.
+  System One has no refusal answer type.
 
 Missing Chat Completions content raises `TypeError`; invalid JSON propagates
 `SyntaxError`. The library does not attempt regex extraction from surrounding
@@ -339,15 +366,15 @@ The response should report the downstream call rather than pretending that a
 native Decisions request occurred. If the downstream protocol omits usage, the
 converted response should omit it as well:
 
-| Decisions field | Responses | Chat Completions | Anthropic Messages |
-| --- | --- | --- | --- |
-| `model` | Response model | Completion model | Message model |
-| `input_tokens` | Input tokens | Prompt tokens | Base + cache creation + cache read input tokens |
-| `cached_tokens` | Cached input tokens | Cached prompt tokens | Cache read input tokens |
-| `cache_write_tokens` | Reported value or `0` | Cache write prompt tokens | Cache creation input tokens |
-| `output_tokens` | Output tokens | Completion tokens | Output tokens |
-| `reasoning_tokens` | Reasoning output tokens | Reasoning completion tokens | `0` when unavailable |
-| `total_tokens` | Reported total | Reported total | Mapped input + output |
+| Decisions field | Responses | Chat Completions | Anthropic Messages | TypeSafe System One |
+| --- | --- | --- | --- | --- |
+| `model` | Response model | Completion model | Message model | Result model |
+| `input_tokens` | Input tokens | Prompt tokens | Base + cache creation + cache read input tokens | Input tokens |
+| `cached_tokens` | Cached input tokens | Cached prompt tokens | Cache read input tokens | `0` when unavailable |
+| `cache_write_tokens` | Reported value or `0` | Cache write prompt tokens | Cache creation input tokens | `0` when unavailable |
+| `output_tokens` | Output tokens | Completion tokens | Output tokens | Output tokens |
+| `reasoning_tokens` | Reasoning output tokens | Reasoning completion tokens | `0` when unavailable | `0` when unavailable |
+| `total_tokens` | Reported total | Reported total | Mapped input + output | Mapped input + output |
 
 Zero in a provider-unavailable detail field means "not reported by this
 protocol," not proof that the provider performed no such work. This limitation
@@ -365,6 +392,7 @@ src/
     anthropic-messages.ts
     openai-completions.ts
     openai-responses.ts
+    typesafe-systemone.ts
 ```
 
 Responsibilities should remain narrow:
@@ -386,6 +414,11 @@ range `>=0.72.0`, the first release declaring `output_config.format` and the
 non-streaming Messages request and response types used by this adapter.
 [cite:12]
 
+The official `@typesafe-ai/sdk` package is likewise a type-only dependency and
+optional peer dependency. The adapter requires `>=0.5.7`, its first public
+release, which exports `SystemOneRequest`, `SystemOneResult`, and the native
+`noul`, `choice`, and `score` protocol types.[cite:13][cite:14]
+
 ## Error Model
 
 The current implementation uses built-in errors:
@@ -394,6 +427,8 @@ The current implementation uses built-in errors:
   and unknown question types.
 - `RangeError` for answer count and probability vector length mismatches.
 - `SyntaxError` from `JSON.parse` for malformed generated JSON.
+- `TypeError` for System One image input and answer-type mismatches.
+- `RangeError` when a System One score has fewer than two levels.
 
 OpenAI provider-level refusals are valid model outcomes and become refusal
 answers.
@@ -425,6 +460,12 @@ The OpenAI Chat Completions test uses:
 - `VITE_OPENAI_API_KEY`
 - `VITE_OPENAI_BASE_URL`
 - `VITE_OPENAI_DECISION_MODEL`
+
+The TypeSafe System One test uses:
+
+- `VITE_TYPESAFE_API_KEY`
+- `VITE_TYPESAFE_BASE_URL`
+- `VITE_TYPESAFE_DECISION_MODEL`
 
 One request should cover predicate, choice, and score questions together to
 limit cost while exercising the complete request and response conversion path.
@@ -521,3 +562,5 @@ The following choices are recommended for approval before implementation:
 - [cite:10] [Anthropic Messages API reference](https://platform.claude.com/docs/en/api/messages/create)
 - [cite:11] [OpenAI Node SDK 7.30.0 package](https://www.npmjs.com/package/openai/v/7.30.0)
 - [cite:12] [Anthropic TypeScript SDK 0.72.0 package](https://www.npmjs.com/package/@anthropic-ai/sdk/v/0.72.0)
+- [cite:13] [TypeSafe System One API reference](https://docs.typesafe.ai/api)
+- [cite:14] [TypeSafe JavaScript SDK changelog](https://docs.typesafe.ai/sdk/javascript/changelog)

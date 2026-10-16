@@ -62,6 +62,7 @@
     "@cyansalt/eslint-config": "^4.6.0",
     "@cyansalt/tsconfig": "^3.0.2",
     "@release-it/conventional-changelog": "^12.0.2",
+    "@typesafe-ai/sdk": "^0.7.0",
     "eslint": "^10.12.0",
     "openai": "^7.33.0",
     "release-it": "^21.1.1",
@@ -71,10 +72,14 @@
   },
   "peerDependencies": {
     "@anthropic-ai/sdk": ">=0.72.0",
+    "@typesafe-ai/sdk": ">=0.5.7",
     "openai": ">=7.30.0"
   },
   "peerDependenciesMeta": {
     "@anthropic-ai/sdk": {
+      "optional": true
+    },
+    "@typesafe-ai/sdk": {
       "optional": true
     },
     "openai": {

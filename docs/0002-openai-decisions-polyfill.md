@@ -53,7 +53,7 @@ models.[cite:7]
 - Support text and image evidence.
 - Support `predicate`, `choice`, and `score` questions in one request.
 - Preserve question order, names, typed choice values, and score labels.
-- Represent per-question and provider-level refusals.
+- Represent per-question refusals.
 - Target OpenAI Responses, OpenAI Chat Completions, and Anthropic Messages.
 - Pass the required Decisions `model` field through to the target protocol.
 - Keep protocol conversion pure and independent from HTTP clients, credentials,
@@ -146,14 +146,10 @@ validate that string against OpenAI's hosted model list: it represents the model
 understood by the selected target endpoint and is passed through unchanged.
 
 Anthropic Messages requires `max_tokens`, even though Decisions has no
-equivalent field.[cite:10] The Anthropic adapter should derive a conservative
-output budget from the number of questions and the total number of predicate,
-choice, and score probability slots. The calculation should serialize a
-worst-case generated-result skeleton and add a documented safety margin, rather
-than expose a caller option or use a request-independent constant. If that
-calculated budget exceeds the selected model's limit, the provider may reject
-the request; model capability discovery remains outside this transport-agnostic
-library.
+equivalent field.[cite:10] The Anthropic adapter uses a fixed `8_192` token
+budget, safely below Claude's general `128_000` token output limit. It exposes
+no caller option; model capability discovery remains outside this
+transport-agnostic library.
 
 ### Output Carrier Decision
 
@@ -285,8 +281,7 @@ The canonical input mapper should preserve evidence order:
 - `input_image` becomes the target protocol's image block.
 - The current Chat Completions adapter maps only the image URL and omits
   Decisions image `detail`.
-- Data URLs are parsed into Anthropic base64 source fields.
-- Public HTTP(S) URLs become Anthropic URL source fields.
+- Anthropic maps every image URL to its URL source without rewriting it.
 - No file, audio, assistant, tool, or item-reference types are accepted.
 
 No adapter should download or rewrite image content. Network access belongs to
@@ -301,8 +296,7 @@ Each protocol module should extract exactly one complete structured document:
 - Chat Completions: read the first non-streaming choice; require string
   `message.content` and parse it as `DecisionPonyData`, unless
   `message.refusal` maps every question to a refusal.
-- Anthropic Messages: require the structured JSON text block; a refusal stop
-  reason maps every question to a refusal.
+- Anthropic Messages: require the structured JSON text block.
 
 Missing Chat Completions content raises `TypeError`; invalid JSON propagates
 `SyntaxError`. The library does not attempt regex extraction from surrounding
@@ -361,13 +355,13 @@ must remain in the API documentation.
 
 ## Module Layout
 
-The current protocol-oriented structure should remain visible:
+The current adapter-oriented structure should remain visible:
 
 ```text
 src/
   decision.ts
   index.ts
-  protocols/
+  adapters/
     anthropic-messages.ts
     openai-completions.ts
     openai-responses.ts
@@ -375,7 +369,7 @@ src/
 
 Responsibilities should remain narrow:
 
-- Protocol modules: official SDK wire types plus request and response mapping.
+- Adapter modules: official SDK wire types plus request and response mapping.
 - `decision.ts`: shared prompt, response schema, generated result types, and
   deterministic Decisions answer construction.
 
@@ -386,6 +380,12 @@ confirms that 7.28.0 has no Decisions declarations while 7.30.0 exports them.
 [cite:1][cite:11] All imports from it must use `import type`, and runtime code
 must not depend on the SDK.
 
+The official `@anthropic-ai/sdk` package follows the same type-only dependency
+pattern for the Messages adapter. It is an optional peer dependency with the
+range `>=0.72.0`, the first release declaring `output_config.format` and the
+non-streaming Messages request and response types used by this adapter.
+[cite:12]
+
 ## Error Model
 
 The current implementation uses built-in errors:
@@ -395,7 +395,8 @@ The current implementation uses built-in errors:
 - `RangeError` for answer count and probability vector length mismatches.
 - `SyntaxError` from `JSON.parse` for malformed generated JSON.
 
-Provider-level refusals are valid model outcomes and become refusal answers.
+OpenAI provider-level refusals are valid model outcomes and become refusal
+answers.
 Transport failures and provider HTTP error envelopes remain the caller's
 responsibility.
 
@@ -475,9 +476,9 @@ limit cost while exercising the complete request and response conversion path.
 ### Phase 5: Anthropic Messages Adapter
 
 - Add system and message mapping.
-- Convert image URLs and data URLs to Anthropic image sources.
+- Map image URLs to Anthropic URL sources.
 - Add `output_config.format`.
-- Map structured text, refusal, model, cache usage, and token usage.
+- Map structured text, model, cache usage, and token usage.
 
 ### Phase 6: Public Documentation and Release Readiness
 
@@ -519,3 +520,4 @@ The following choices are recommended for approval before implementation:
 - [cite:9] [Anthropic tool definition and tool choice guide](https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools)
 - [cite:10] [Anthropic Messages API reference](https://platform.claude.com/docs/en/api/messages/create)
 - [cite:11] [OpenAI Node SDK 7.30.0 package](https://www.npmjs.com/package/openai/v/7.30.0)
+- [cite:12] [Anthropic TypeScript SDK 0.72.0 package](https://www.npmjs.com/package/@anthropic-ai/sdk/v/0.72.0)

@@ -58,20 +58,25 @@
     ]
   },
   "devDependencies": {
+    "@anthropic-ai/sdk": "^0.133.0",
     "@cyansalt/eslint-config": "^4.6.0",
     "@cyansalt/tsconfig": "^3.0.2",
     "@release-it/conventional-changelog": "^12.0.2",
     "eslint": "^10.12.0",
-    "openai": "^7.34.0",
+    "openai": "^7.33.0",
     "release-it": "^21.1.1",
     "tsdown": "^0.23.1",
     "typescript": "^6.0.3",
     "vitest": "^5.0.4"
   },
   "peerDependencies": {
+    "@anthropic-ai/sdk": ">=0.72.0",
     "openai": ">=7.30.0"
   },
   "peerDependenciesMeta": {
+    "@anthropic-ai/sdk": {
+      "optional": true
+    },
     "openai": {
       "optional": true
     }

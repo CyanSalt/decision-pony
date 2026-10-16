@@ -60,19 +60,18 @@ export function fromOpenAIResponsesResponse(
   if (!message) {
     throw new TypeError('The response must contain a completed output message')
   }
-  const refusal = message.content.find(part => part.type === 'refusal')
   let answers: Decision['answers']
-  if (refusal) {
+  if (message.content.some(part => part.type === 'refusal')) {
     answers = request.questions.map<Decision.AnswerResourceRefusal>(question => ({
-      type: 'refusal',
       name: question.name ?? null,
+      type: 'refusal',
     }))
   } else {
-    const outputText = message.content.find(part => part.type === 'output_text')
-    if (!outputText) {
+    const outputPart = message.content.find(part => part.type === 'output_text')
+    if (!outputPart) {
       throw new TypeError('The completed output message must contain text')
     }
-    const result = JSON.parse(outputText.text) as DecisionPonyData
+    const result = JSON.parse(outputPart.text) as DecisionPonyData
     answers = getAnswers(result, request)
   }
   return {

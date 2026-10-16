@@ -1,4 +1,2 @@
 allowBuilds:
   unrs-resolver: true
-minimumReleaseAgeExclude:
-  - openai@7.34.0

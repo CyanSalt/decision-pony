@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import {
   fromOpenAIResponsesResponse,
   toOpenAIResponsesRequest,
-} from '../src/protocols/openai-responses'
+} from '../src/adapters/openai-responses'
 
 const client = new OpenAI({
   apiKey: import.meta.env.VITE_OPENAI_API_KEY,
@@ -12,6 +12,7 @@ const client = new OpenAI({
 })
 
 describe('OpenAI Responses adapter', () => {
+
   it('converts a Decisions request and a real Responses response', async () => {
     const request = {
       model: import.meta.env.VITE_OPENAI_DECISION_MODEL!,
@@ -77,4 +78,5 @@ describe('OpenAI Responses adapter', () => {
     expect(decision.usage.output_tokens).toBeGreaterThan(0)
     expect(decision.usage.total_tokens).toBeGreaterThan(0)
   }, 30_000)
+
 })

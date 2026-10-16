@@ -21,14 +21,15 @@ import {
   toOpenAICompletionsRequest,
 } from 'decision-pony'
 import type OpenAI from 'openai'
+import type { Decision, DecisionCreateParams } from 'openai/resources'
 
 // Polyfill for `client.decisions.create` on OpenAI-compatible endpoints without
 // Decisions API support or with non-System-One models.
 async function createDecisions(client: OpenAI, body: DecisionCreateParams): Promise<Decision> {
+  const request = toOpenAICompletionsRequest(body)
   return fromOpenAICompletionsResponse(
-    await client.chat.completions.create(
-      toOpenAICompletionsRequest(body),
-    )
+    await client.chat.completions.create(request),
+    request,
   )
 }
 ```
@@ -44,14 +45,38 @@ import {
   toOpenAIResponsesRequest,
 } from 'decision-pony'
 import type OpenAI from 'openai'
+import type { Decision, DecisionCreateParams } from 'openai/resources'
 
 // Polyfill for `client.decisions.create` on OpenAI-compatible endpoints without
 // Decisions API support or with non-System-One models.
 async function createDecisions(client: OpenAI, body: DecisionCreateParams): Promise<Decision> {
+  const request = toOpenAIResponsesRequest(body)
   return fromOpenAIResponsesResponse(
-    await client.responses.create(
-      toOpenAIResponsesRequest(body),
-    )
+    await client.responses.create(request),
+    request,
+  )
+}
+```
+
+<br></details>
+
+<details>
+<summary>With Anthropic Messages API</summary><br>
+
+```typescript
+import type Anthropic from '@anthropic-ai/sdk'
+import {
+  fromAnthropicMessagesResponse,
+  toAnthropicMessagesRequest,
+} from 'decision-pony'
+import type { Decision, DecisionCreateParams } from 'openai/resources'
+
+// Polyfill for `client.decisions.create` with the Anthropic Messages API.
+async function createDecisions(client: Anthropic, body: DecisionCreateParams): Promise<Decision> {
+  const request = toAnthropicMessagesRequest(body)
+  return fromAnthropicMessagesResponse(
+    await client.messages.create(request),
+    request,
   )
 }
 ```

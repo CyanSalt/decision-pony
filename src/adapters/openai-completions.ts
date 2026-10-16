@@ -81,8 +81,8 @@ export function fromOpenAICompletionsResponse(
   let answers: Decision['answers']
   if (message.refusal) {
     answers = request.questions.map<Decision.AnswerResourceRefusal>(question => ({
-      type: 'refusal',
       name: question.name ?? null,
+      type: 'refusal',
     }))
   } else {
     if (!message.content) {

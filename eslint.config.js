@@ -12,9 +12,6 @@ export default config({
           ],
         },
       },
-      rules: {
-        'unicorn/prefer-node-protocol': 'off',
-      },
     },
   ],
 })

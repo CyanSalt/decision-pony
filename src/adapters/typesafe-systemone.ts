@@ -11,8 +11,10 @@ import type { Decision, DecisionCreateParams } from 'openai/resources'
 import type { DecisionPonyData } from '../decision'
 import { getAnswers } from '../decision'
 
-function keyOf(type: 'question' | 'choice' | 'level', index: number): string {
-  return `${type}-${index}`
+type DecisionQuestion = DecisionCreateParams['questions'][number]
+
+function getName(question: DecisionQuestion, index: number): string {
+  return question.name ?? `question-${index}`
 }
 
 function toTypeSafeState(input: DecisionCreateParams['input']): SystemOneRequest['state'] {
@@ -32,9 +34,7 @@ function toTypeSafeState(input: DecisionCreateParams['input']): SystemOneRequest
   })
 }
 
-function toTypeSafeQuestion(
-  question: DecisionCreateParams['questions'][number],
-): Question {
+function toTypeSafeQuestion(question: DecisionQuestion): Question {
   switch (question.type) {
     case 'predicate':
       return {
@@ -45,22 +45,12 @@ function toTypeSafeQuestion(
       return {
         type: 'choice',
         instructions: question.instructions,
-        criteria: Object.fromEntries(question.choices.map((choice, index) => {
-          return [keyOf('choice', index), {
-            description: choice.description ?? null,
-            value: choice.value,
-          }]
+        criteria: Object.fromEntries(question.choices.map(choice => {
+          return [choice.value, choice.description ?? null]
         })),
       }
     case 'score': {
-      const criteria = question.levels.map<EntryType>((level, index) => {
-        return {
-          [keyOf('level', index)]: {
-            description: level.description ?? null,
-            label: level.label,
-          },
-        }
-      })
+      const criteria = question.levels.map<EntryType>(level => level.description ?? null)
       if (criteria.length < 2) {
         throw new RangeError('A TypeSafe system-one score question must have at least two levels')
       }
@@ -76,11 +66,9 @@ function toTypeSafeQuestion(
   }
 }
 
-function toTypeSafeQuestions(
-  questions: DecisionCreateParams['questions'],
-): SystemOneRequest['questions'] {
+function toTypeSafeQuestions(questions: DecisionQuestion[]): Questions {
   return Object.fromEntries(questions.map((question, index) => {
-    return [keyOf('question', index), toTypeSafeQuestion(question)]
+    return [getName(question, index), toTypeSafeQuestion(question)]
   }))
 }
 
@@ -89,8 +77,8 @@ function toDecisionPonyData(
   request: DecisionCreateParams,
 ): DecisionPonyData {
   return {
-    answers: request.questions.map((question, questionIndex) => {
-      const questionKey = keyOf('question', questionIndex)
+    answers: request.questions.map((question, index) => {
+      const questionKey = getName(question, index)
       const answer = response.answers[questionKey]
       switch (question.type) {
         case 'predicate':
@@ -108,8 +96,8 @@ function toDecisionPonyData(
           return {
             status: 'answered',
             confidence: answer.confidence,
-            probabilities: question.choices.map((choice, choiceIndex) => {
-              const choiceKey = keyOf('choice', choiceIndex)
+            probabilities: question.choices.map(choice => {
+              const choiceKey = String(choice.value)
               if (!(choiceKey in answer.probabilities)) {
                 throw new TypeError(`The 'probabilities' must contain '${choiceKey}'`)
               }
@@ -124,11 +112,10 @@ function toDecisionPonyData(
             status: 'answered',
             confidence: answer.confidence,
             probabilities: question.levels.map((level, levelIndex) => {
-              const levelKey = keyOf('level', levelIndex)
-              if (!(levelKey in answer.probabilities)) {
-                throw new TypeError(`The 'probabilities' must contain '${levelKey}'`)
+              if (!(levelIndex in answer.probabilities)) {
+                throw new TypeError(`The 'probabilities' must contain '${levelIndex}'`)
               }
-              return answer.probabilities[levelKey]
+              return answer.probabilities[levelIndex]
             }),
           }
         default:

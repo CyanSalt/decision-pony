@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/CyanSalt/decision-pony/compare/v0.1.0...v0.1.1) (2026-10-16)
+
+### Features
+
+* add TypeSafe System One adapter ([d20bfdf](https://github.com/CyanSalt/decision-pony/commit/d20bfdf8a63c2f02d607d169c65a63c5ee7742a7))
+* add TypeSafe System One reverse adapter ([cbf2c37](https://github.com/CyanSalt/decision-pony/commit/cbf2c37b8ea4e88927ba07e6d2a9a59cb1f4c5aa))
+
 ## 0.1.0 (2026-10-16)
 
 ### Features

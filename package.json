@@ -1,6 +1,6 @@
 {
   "name": "decision-pony",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "OpenAI Decisions API polyfill with conversational LLM protocols",
   "type": "module",
   "main": "./dist/index.mjs",

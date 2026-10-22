@@ -224,14 +224,13 @@ The vector meaning is deterministic:
 | `choice` | One value for each choice in request order |
 | `score` | One value for each level in request order |
 
-For an answered predicate, `confidence` is omitted. For an answered choice or
-score, it is the model's separate confidence estimate. For a refusal, the
-decoder uses only `status`; the other generated fields do not affect the
-Decisions refusal answer.
+Every generated answer includes `confidence`. For an answered choice or score,
+it is the model's separate confidence estimate. The decoder ignores it for
+predicates and refusals.
 
-The shared strict JSON Schema requires `status` and `probabilities`, makes
-`confidence` optional, constrains probability and confidence values to
-`[0, 1]`, and rejects additional properties. Adapters reuse the exported
+The shared strict JSON Schema requires `status`, `probabilities`, and
+`confidence`, constrains probability and confidence values to `[0, 1]`, and
+rejects additional properties. Adapters reuse the exported
 `DECISION_RESPONSE_SCHEMA` rather than defining protocol-specific copies.
 
 ### Prompt Compilation

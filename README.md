@@ -141,4 +141,6 @@ async function systemOne(
 
 OpenAI Decisions API is designed for System One models. `decision-pony` simulates it through an LLM's text-generation capability, so the two approaches are not equivalent. `decision-pony` may use more tokens, take longer, and generally produce less accurate decisions than the native Decisions API.
 
+To make its operation resemble the System One models, `decision-pony` generates parameters by default that disable reasoning. If you wish to prioritize accuracy over speed, you can manually override these parameters.
+
 TypeSafe System One (Jev) API and OpenAI Decisions API have different expressive capabilities. Conversion between them may lose information, but `decision-pony` preserves enough context to correctly convert the response to a converted request back to its source API.

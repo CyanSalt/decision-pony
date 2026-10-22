@@ -55,6 +55,9 @@ export function toAnthropicMessagesRequest(
     },
     stream: false,
     system: DECISION_SYSTEM_PROMPT,
+    thinking: {
+      type: 'disabled',
+    },
   }
 }
 

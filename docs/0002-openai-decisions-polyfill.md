@@ -152,6 +152,19 @@ budget, safely below Claude's general `128_000` token output limit. It exposes
 no caller option; model capability discovery remains outside this
 transport-agnostic library.
 
+Decision requests should minimize latency and token use rather than request
+chain-of-thought. The adapters therefore disable reasoning where their target
+protocol supports it:
+
+- OpenAI Responses uses `reasoning: { effort: 'none' }`.
+- OpenAI Chat Completions uses `reasoning_effort: 'none'`.
+- Anthropic Messages uses `thinking: { type: 'disabled' }`.
+
+TypeSafe System One has no reasoning or thinking request field, so its adapter
+does not add an unsupported configuration property. A model that does not
+support the applicable setting remains a downstream provider compatibility
+error; the adapters do not maintain per-model capability tables.
+
 ### Output Carrier Decision
 
 The result can be carried either as structured model output or as arguments to

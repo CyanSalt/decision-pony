@@ -53,6 +53,7 @@ export function toOpenAICompletionsRequest(
       },
     },
     safety_identifier: request.safety_identifier,
+    reasoning_effort: 'none',
     stream: false,
   }
 }

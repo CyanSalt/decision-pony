@@ -41,6 +41,9 @@ export function toOpenAIResponsesRequest(
       },
     },
     safety_identifier: request.safety_identifier,
+    reasoning: {
+      effort: 'none',
+    },
     stream: false,
   }
 }

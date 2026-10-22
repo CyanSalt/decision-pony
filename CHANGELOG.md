@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/CyanSalt/decision-pony/compare/v0.1.1...v0.1.2) (2026-10-22)
+
+### Bug Fixes
+
+* disable reasoning by default ([179c1cc](https://github.com/CyanSalt/decision-pony/commit/179c1cc4bdbebffe5d4452308cfd64164e3ad73e))
+* make confidence required ([f9963ab](https://github.com/CyanSalt/decision-pony/commit/f9963ab6e0d52555d1eb8be4f42469e097408d04))
+
 ## [0.1.1](https://github.com/CyanSalt/decision-pony/compare/v0.1.0...v0.1.1) (2026-10-16)
 
 ### Features

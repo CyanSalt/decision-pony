@@ -1,6 +1,6 @@
 {
   "name": "decision-pony",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "OpenAI Decisions API and TypeSafe API (Jev) polyfill with conversational LLM protocols",
   "type": "module",
   "main": "./dist/index.mjs",

@@ -57,6 +57,10 @@ export interface DecisionPonyData {
   answers: DecisionPonyAnswer[],
 }
 
+function stripFloat(value: number): number {
+  return Number.parseFloat(value.toPrecision(15))
+}
+
 function getAnswer(
   answer: DecisionPonyAnswer,
   question: DecisionCreateParams['questions'][number],
@@ -122,7 +126,9 @@ function getAnswer(
       label: question.levels[index].label,
       probability,
     })),
-    score: normalized.reduce((score, probability, index) => score + probability * index, 0),
+    score: stripFloat(
+      normalized.reduce((score, probability, index) => score + probability * index, 0),
+    ),
     type: 'score',
   }
 }
